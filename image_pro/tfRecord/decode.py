@@ -1,14 +1,9 @@
-#NOTE: refer to this url: https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/how_tos/reading_data/fully_connected_reader.py
-import tensorflow as tf
-import numpy as np
 import os
+import numpy as np
+import tensorflow as tf
 import matplotlib.pyplot as plt
 
-
-
-
-
-
+#NOTE: refer to this url: https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/how_tos/reading_data/fully_connected_reader.py
 
 def tfrec_data_input_fn(filenames, num_epochs=1, batch_size=16, shuffle=False):
     
@@ -83,16 +78,12 @@ def tfrec_data_catvdog(filenames, num_epochs=1, batch_size=16):
 
             image_raw = tf.decode_raw(record['image'], tf.uint8)
             
-            
             def _normalize(image):
                 """Convert `image` from [0, 255] -> [-0.5, 0.5] floats."""
                 image = tf.cast(image, tf.float32) * (1. / 255)-0.5
                 return image
 
             image_n = _normalize(image_raw)
-            
-            
-
             return { 'image': image_n }
         
         # For TF dataset blog post, see https://developers.googleblog.com/2017/09/introducing-tensorflow-datasets.html
@@ -108,9 +99,6 @@ def tfrec_data_catvdog(filenames, num_epochs=1, batch_size=16):
         return features
     
     return _input_fn
-
-
-
 
 
 '''read_file("./tftest.tfrecords")

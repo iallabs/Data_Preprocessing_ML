@@ -1,24 +1,19 @@
-from random import shuffle, seed
 import os
-import glob
-from image_pro.utils_data.contours.contours import draw_all_contours
-import numpy as np
-
 import cv2
-
+import sys
+import glob
+import numpy as np
 import tensorflow as tf
 
-import sys
+from random import shuffle, seed
+from image_pro.utils_data.contours.contours import draw_all_contours
 
 
 # This function returns the different paths and corresponding labels
 def shuffling_data(data_path, labels):
     c = list(zip(data_path, labels))
-
     shuffle(c)
-
     #NOTE: data and labeld are tuples. Care about immutability 
-
     data, labeled = zip(*c) #NOTE:ith element in data correpand to ith label elmt
 
     return data, labeled
@@ -47,40 +42,27 @@ def read_paths_treat(ur_path, test_size):
 
 
 def split_data(training_prop,test_prop, data, labels, dev_prop=0):
-
     ''' 
     - training_prop is required .numerical float < 1
     - dev_prop is optional. Numerical float < 0.3
     - test_prop is required. Numerical float < 0.3
     - data and labels are lists 
     '''
-
     #NOTE: data is a list of paths of each image
 
     training_data = data[0:int(training_prop*len(data))]
-
     training_labels = labels[0:int(training_prop*len(labels))]
 
-
-
     if dev_prop != 0:
-
         dev_data = data[int(training_prop*len(data)):int((1-dev_prop)*len(data))]
-
         dev_labels = labels[int(training_prop*len(labels)):int((1-dev_prop)*len(labels))]
-
         test_data = data[int((1-dev_prop)*len(data)):]
-
         test_labels = labels[int((1-dev_prop)*len(labels)):]
-
         return training_data,training_labels, dev_data, dev_labels, test_data, test_labels
 
     else:
-
         test_data = data[int((1-test_prop)*len(data)):]
-
         test_labels = labels[int((1-test_prop)*len(labels)):]
-
         return training_data, training_labels, test_data, test_labels
 
 def load(ur_path, option):
@@ -99,14 +81,9 @@ def load(ur_path, option):
 def load_image(data, s_width, s_height, option):
 
     #cv2 load data from data (value of one path) 
-
     img_load = load(data, UR_OPTION)
-
-   
     '''img_after = cv2.cvtColor(img_load, cv2.COLOR_BGR2GRAY)'''
-    
     img= cv2.resize(img_cont, dsize=(s_width, s_height), interpolation=cv2.INTER_CUBIC)
-
     img_f = img.tostring()
     
     return img_f
@@ -127,32 +104,25 @@ def _bytes_feature(value):
 def get_tfrecord_file(ur_path, test_size, s_width, s_height,option, *x_filename,):
 
     #NOTE:data is a tuple (list) of paths of each image
-
     #NOTE: data can come from the dev-set or test-set
-
     #NOTE: Same for labeled
 
     test_img, test_label, train_img, train_label = read_paths_treat(ur_path, test_size)
-
     file_path = x_filename[0]
-
     #Open a TFRecordWriter
 
     writer = tf.python_io.TFRecordWriter(file_path)
     for i in range(len(train_img)):
         new_img = load_image(train_img[i], s_width, s_height,option)
-
         new_label = train_label[i]
-
         new_feature = { 'height': _int64_feature(s_height),
                         'width' : _int64_feature(s_width),
                         'label': _int64_feature(new_label),
                         'image': _bytes_feature(tf.compat.as_bytes(new_img))
         }
+
         #NOTE: PLease refer to this url for defenirtion: https://github.com/tensorflow/tensorflow/blob/r1.7/tensorflow/core/example/example.proto
-
         example = tf.train.Example(features=tf.train.Features(feature=new_feature))
-
         writer.write(example.SerializeToString())
 
     writer.close()
@@ -163,24 +133,19 @@ def get_tfrecord_file(ur_path, test_size, s_width, s_height,option, *x_filename,
     for j in range(len(test_img)):
 
         new_img = load_image(test_img[j], s_width, s_height,option)
-
         new_label = test_label[j]
-
         new_feature = { 'height': _int64_feature(s_height),
                         'width' : _int64_feature(s_width),
                         'label': _int64_feature(new_label),
                         'image': _bytes_feature(tf.compat.as_bytes(new_img))
         }
+
         #NOTE: PLease refer to this url for def: https://github.com/tensorflow/tensorflow/blob/r1.7/tensorflow/core/example/example.proto
-
         example = tf.train.Example(features=tf.train.Features(feature=new_feature))
-
         writer.write(example.SerializeToString())
 
     writer.close()
-
     sys.stdout.flush()
-
     return 0
 
 

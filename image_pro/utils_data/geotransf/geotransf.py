@@ -1,10 +1,10 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+
 #Let's consider M the translation matrix. Given a translation vector (tx,ty),
 # the matrix is defined as follows: M = [1 0 tx]
 #                                       [0 1 ty]
-
 
 ##################
 # Translation

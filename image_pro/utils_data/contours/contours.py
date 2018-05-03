@@ -15,7 +15,6 @@ def canny_cont(frame, threch1, threch2):
 ###################
 # Thresholding
 ####################
-
 def thresh_bin(frame, value_thr, value_aft):
     _ , img  = cv2.threshold(frame, value_thr, value_aft, cv2.THRESH_BINARY)
     return img
@@ -28,7 +27,7 @@ def find_contours(frame, approx=False):
         image, contours, hierarchy = cv2.findContours(tresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
     return image, contours, hierarchy
-    
+
     #image: source image
     # contours: contour retrieval mode
     # hierarchy: contour approximation method
@@ -122,7 +121,6 @@ def mask_pix(frame_gray):
     cv2.drawContours(mask,contours,0,255)
     pixelpoints = cv2.findNonZero(mask)
     return pixelpoints
-
 
 #Aspect ratio: It is the ratio of width to height of bounding rect of the object
 
