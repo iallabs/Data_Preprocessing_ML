@@ -1,7 +1,7 @@
 from random import shuffle, seed
 import os
 import glob
-from .utils_data.contours.contours import draw_all_contours
+from image_pro.utils_data.contours.contours import draw_all_contours
 import numpy as np
 
 import cv2
@@ -9,13 +9,6 @@ import cv2
 import tensorflow as tf
 
 import sys
-
-
-
-
-
-
-
 
 
 # This function returns the different paths and corresponding labels

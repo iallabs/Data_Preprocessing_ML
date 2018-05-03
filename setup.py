@@ -2,14 +2,14 @@ from setuptools import setup, find_packages
 
 
 setup(
-name='image_pro',
-version='0.0.1',
-description='Image processing and save into Tfrecords',
-author='',
-author_email='hilalyamine@gmail.com/alaa.el.bouchti@gmail.com',
-license='Open',
-packages=find_packages(include=['image_pro','image_pro.*','tfRecord', 'utils_data']),
-packages_dir={'tfrecord':'tfRecord',
+    name='image_pro',
+    version='0.0.1',
+    description='Image processing and save into Tfrecords',
+    author='',
+    author_email='hilalyamine@gmail.com/alaa.el.bouchti@gmail.com',
+    license='Open',
+    packages=find_packages(include=['image_pro','image_pro.*','tfRecord', 'utils_data']),
+    packages_dir={'tfrecord':'tfRecord',
               'tfrecord.tfrecord':'tfRecord/tfrecord.py',
               'tfrecord.decode':'tfRecord/decode.py',
               'utils': 'utils_data',
@@ -23,6 +23,5 @@ packages_dir={'tfrecord':'tfRecord',
               'utils.norma.norma':'utils_data/contours/norma.py',
               'utils.visualize':'utils_data/contours',
               'utils.visualize.visu':'utils_data/visualize/visu.py'            
-},
-scripts = ['parameters.py']
+    },
 )
