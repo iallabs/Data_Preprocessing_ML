@@ -6,7 +6,8 @@ import numpy as np
 import tensorflow as tf
 
 from random import shuffle, seed
-from image_pro.utils_data.contours.contours import draw_all_contours
+from image_pro.parameters import *
+from image_pro.utils_data.norma.norma import laplacian
 
 
 # This function returns the different paths and corresponding labels
@@ -82,8 +83,8 @@ def load_image(data, s_width, s_height, option):
 
     #cv2 load data from data (value of one path) 
     img_load = load(data, UR_OPTION)
-    '''img_after = cv2.cvtColor(img_load, cv2.COLOR_BGR2GRAY)'''
-    img= cv2.resize(img_cont, dsize=(s_width, s_height), interpolation=cv2.INTER_CUBIC)
+    img_load = cv2.blur(img_load, (5,5))
+    img= cv2.resize(img_load, dsize=(s_width, s_height), interpolation=cv2.INTER_CUBIC)
     img_f = img.tostring()
     
     return img_f
@@ -167,5 +168,5 @@ def get_tfrecord_pred(ur_path, s_width, s_height,option, x_filename):
     return 0
 
 
-'''get_tfrecord_pred(UR_PRED_PATH, 256, 256,UR_OPTION, "tfpred.tfrecords")'''
-get_tfrecord_file(UR_DATA_PATH, UR_TEST_SIZE, 128, 128,UR_OPTION, "tftrain.tfrecords", "tftest.tfrecords")
+get_tfrecord_pred(UR_PRED_PATH, T_HEIGHT, T_WIDTH,UR_OPTION, "tfpred.tfrecords")
+get_tfrecord_file(UR_DATA_PATH, UR_TEST_SIZE, T_HEIGHT, T_WIDTH,UR_OPTION, "tftrain.tfrecords", "tftest.tfrecords")
