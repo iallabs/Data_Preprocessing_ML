@@ -8,9 +8,9 @@ from image_pro.parameters import *
 
 num_classes = 2
 num_step = 1500
-num_epochs = 100
-learning_rate = 0.003
-beta = 0.004
+num_epochs = 65
+learning_rate = 0.0001
+beta = 0.00225
 def create_placeholders(n_H0, n_W0, n_C0, n_y):
     """
     Creates the placeholders for the tensorflow session.
@@ -40,13 +40,27 @@ def initialize_parameters():
     
     tf.set_random_seed(1)                              # so that your "random" numbers match ours
 
-    W1 = tf.get_variable("W1", [5,5,1,8], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    W2 = tf.get_variable("W2", [3,3,8,16], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    W3 = tf.get_variable("W3", [5,5,16,24], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    
+    W1 = tf.get_variable("W1", [5,5,1,4], initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    W2 = tf.get_variable("W2", [3,3,4,8], initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    W3 = tf.get_variable("W3", [5,5,8,12], initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    W4 = tf.get_variable("W4", [3,3,12,16], initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    W5 = tf.get_variable("W5", [5,5,16,24], initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    b1 = tf.get_variable("b1", [1,1,1,4],initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    b2 = tf.get_variable("b2", [1,1,1,8],initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    b3 = tf.get_variable("b3", [1,1,1,12],initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    b4 = tf.get_variable("b4", [1,1,1,16],initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    b5 = tf.get_variable("b5", [1,1,1,24],initializer=tf.contrib.layers.xavier_initializer(seed=0))
+
     parameters = {"W1": W1,
+                  "b1": b1,
                   "W2": W2,
-                  "W3": W3
+                  "b2": b2,
+                  "W3": W3,
+                  "b3": b3,
+                  "W4": W4,
+                  "b4": b4,
+                  "W5": W5,
+                  "b5": b5
                   }
     
     return parameters
@@ -67,35 +81,53 @@ def forward_propagation(X, parameters):
     
     # Retrieve the parameters from the dictionary "parameters" 
     W1 = parameters['W1']
+    b1 = parameters['b1']
     W2 = parameters['W2']
+    b2 = parameters['b2']
     W3 = parameters['W3']
+    b3 = parameters['b3']
+    W4 = parameters['W4']
+    b4 = parameters['b4']
+    W5 = parameters['W5']
+    b5 = parameters['b5']
 
     # CONV2D: stride of 1, padding 'SAME'
-    Z1 = tf.nn.conv2d(X,W1, strides = [1,1,1,1], padding = 'SAME')
+    Z1 = tf.nn.conv2d(X,W1, strides = [1,1,1,1], padding = 'SAME') + b1
     # RELU
     A1 = tf.nn.relu(Z1)
-    # MAXPOOL: window 4x4, sride 4, padding 'SAME'
-    P1 = tf.nn.max_pool(A1, ksize = [1,4,4,1], strides = [1,4,4,1], padding = 'SAME')
+    # MAXPOOL: window 4,4 sride 1, padding 'VALID'
+    P1 = tf.nn.max_pool(A1, ksize = [1,4,4,1], strides = [1,1,1,1], padding = 'VALID') 
     # CONV2D: filters W2, stride 1, padding 'SAME'
-    Z2 = tf.nn.conv2d(P1, W2, strides=[1,1,1,1], padding='SAME')
+    Z2 = tf.nn.conv2d(P1, W2, strides=[1,1,1,1], padding='SAME') + b2
     # RELU
     A2 = tf.nn.relu(Z2)
-    # MAXPOOL: window 4x4, stride 4, padding 'SAME'
-    P2 = tf.nn.max_pool(A2, ksize=[1,4,4,1], strides=[1,4,4,1], padding='SAME')
+    # MAXPOOL: window 4x4, stride 2, padding 'VALID'
+    P2 = tf.nn.max_pool(A2, ksize=[1,4,4,1], strides=[1,2,2,1], padding='VALID')
     # CONV2D: filters W2, stride 1, padding 'SAME'
-    Z3 = tf.nn.conv2d(P2, W3, strides=[1,1,1,1], padding='SAME')
+    Z3 = tf.nn.conv2d(P2, W3, strides=[1,1,1,1], padding='SAME') + b3
     # RELU
     A3 = tf.nn.relu(Z3)
-    # MAXPOOL: window 4x4, stride 4, padding 'SAME'
-    P3 = tf.nn.max_pool(A3, ksize=[1,3,3,1], strides=[1,3,3,1], padding='SAME')
-    # CONV2D: filters W2, stride 1, padding 'SAME'
+    # MAXPOOL: window 4x4, stride 2, padding 'VALID'
+    P3 = tf.nn.max_pool(A3, ksize=[1,4,4,1], strides=[1,2,2,1], padding='VALID')
+    # CONV2D: filters W4, stride 1, padding 'SAME'
+    Z4 = tf.nn.conv2d(P3, W4, strides=[1,1,1,1], padding='SAME') + b4
+    # RELU
+    A4 = tf.nn.relu(Z4)
+    # MAXPOOL: window 4x4, stride 2, padding 'VALID'
+    P4 = tf.nn.max_pool(A4, ksize=[1,4,4,1], strides=[1,2,2,1], padding='VALID')
+    # CONV2D: filters W4, stride 1, padding 'SAME'
+    Z5 = tf.nn.conv2d(P4, W5, strides=[1,1,1,1], padding='SAME') + b5
+    # RELU
+    A5 = tf.nn.relu(Z5)
+    # MAXPOOL: window 4x4, stride 2, padding 'SAME'
+    P5 = tf.nn.max_pool(A5, ksize=[1,4,4,1], strides=[1,2,2,1], padding='VALID')
     # FLATTEN
-    P3 = tf.contrib.layers.flatten(P3)
+    P5 = tf.contrib.layers.flatten(P5)
     # FULLY-CONNECTED without non-linear activation function (not not call softmax).
     # 6 neurons in output layer. Hint: one of the arguments should be "activation_fn=None" 
-    Z5 = tf.contrib.layers.fully_connected(P3, num_classes, activation_fn=None)
+    Z6 = tf.contrib.layers.fully_connected(P5, num_classes, activation_fn=None)
 
-    return Z5
+    return Z6
 
 def compute_cost(Z3, Y):
     """
@@ -108,7 +140,7 @@ def compute_cost(Z3, Y):
     Returns:
     cost - Tensor of the cost function
     """
-    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = Z3, labels = Y))
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits = Z3, labels = Y))
     
     return cost
 
@@ -148,7 +180,10 @@ Z3 = forward_propagation(X, parameters)
 # Cost function: Add cost function to tensorflow graph
 cost = compute_cost(Z3, Y)
 regularizers = tf.nn.l2_loss(parameters["W1"]) + tf.nn.l2_loss(parameters["W2"]) + \
-                   tf.nn.l2_loss(parameters["W3"])
+                   tf.nn.l2_loss(parameters["W3"]) + tf.nn.l2_loss(parameters["W4"]) + \
+                    tf.nn.l2_loss(parameters["W5"]) + tf.nn.l2_loss(parameters["b1"]) + \
+                    tf.nn.l2_loss(parameters["b2"]) +tf.nn.l2_loss(parameters["b3"]) + \
+                    tf.nn.l2_loss(parameters["b4"]) + tf.nn.l2_loss(parameters["b5"])
 cost = tf.reduce_mean(cost+beta*regularizers)
 # Backpropagation: Define the tensorflow optimizer. Use an AdamOptimizer that minimizes the cost.
 
@@ -186,13 +221,10 @@ with tf.Session() as sess:
             _ , temp_cost = sess.run([optimizer, cost], feed_dict={X: img, Y: label_train})
             temp_acc = accuracy.eval({X:img, Y: label_train})
             train_accuracy += temp_acc/num_step
-            minibatch_cost += temp_cost / num_step
-                
-
-            # Print the cost every epoch
-        if epoch % 5 == 0:
-            print ("Cost after epoch %i: %f" % (epoch, minibatch_cost))
+            minibatch_cost += temp_cost / num_step              
+           
         if epoch % 1 == 0:
+            print ("Cost after epoch %i: %f" % (epoch, minibatch_cost))
             costs.append(minibatch_cost)
             acc_train.append(train_accuracy)
             print ("train after epoch %i: %f" % (epoch, train_accuracy))

@@ -8,9 +8,9 @@ from image_pro.parameters import *
 
 num_classes = 2
 num_step = 1500
-num_epochs = 100
-learning_rate = 0.003
-beta = 0.004
+num_epochs = 125
+learning_rate = 0.009
+beta = 0.0004
 def create_placeholders(n_H0, n_W0, n_C0, n_y):
     """
     Creates the placeholders for the tensorflow session.
@@ -40,13 +40,16 @@ def initialize_parameters():
     
     tf.set_random_seed(1)                              # so that your "random" numbers match ours
 
-    W1 = tf.get_variable("W1", [5,5,1,8], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    W2 = tf.get_variable("W2", [3,3,8,16], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    W3 = tf.get_variable("W3", [5,5,16,24], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    
+    W1 = tf.get_variable("W1", [5,5,1,4], initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    W2 = tf.get_variable("W2", [3,3,4,8], initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    W3 = tf.get_variable("W3", [5,5,8,12], initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    W4 = tf.get_variable("W4", [3,3,12,16], initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    W5 = tf.get_variable("W5", [5,5,16,24], initializer=tf.contrib.layers.xavier_initializer(seed=0))
     parameters = {"W1": W1,
                   "W2": W2,
-                  "W3": W3
+                  "W3": W3,
+                  "W4": W4,
+                  "W5": W5
                   }
     
     return parameters
@@ -69,13 +72,15 @@ def forward_propagation(X, parameters):
     W1 = parameters['W1']
     W2 = parameters['W2']
     W3 = parameters['W3']
+    W4 = parameters['W4']
+    W5 = parameters['W5']
 
     # CONV2D: stride of 1, padding 'SAME'
     Z1 = tf.nn.conv2d(X,W1, strides = [1,1,1,1], padding = 'SAME')
     # RELU
     A1 = tf.nn.relu(Z1)
-    # MAXPOOL: window 4x4, sride 4, padding 'SAME'
-    P1 = tf.nn.max_pool(A1, ksize = [1,4,4,1], strides = [1,4,4,1], padding = 'SAME')
+    # MAXPOOL: window 4x4, sride 1, padding 'SAME'
+    P1 = tf.nn.max_pool(A1, ksize = [1,4,4,1], strides = [1,1,1,1], padding = 'SAME')
     # CONV2D: filters W2, stride 1, padding 'SAME'
     Z2 = tf.nn.conv2d(P1, W2, strides=[1,1,1,1], padding='SAME')
     # RELU
@@ -87,15 +92,26 @@ def forward_propagation(X, parameters):
     # RELU
     A3 = tf.nn.relu(Z3)
     # MAXPOOL: window 4x4, stride 4, padding 'SAME'
-    P3 = tf.nn.max_pool(A3, ksize=[1,3,3,1], strides=[1,3,3,1], padding='SAME')
-    # CONV2D: filters W2, stride 1, padding 'SAME'
+    P3 = tf.nn.max_pool(A3, ksize=[1,4,4,1], strides=[1,4,4,1], padding='SAME')
+    # CONV2D: filters W4, stride 1, padding 'SAME'
+    Z4 = tf.nn.conv2d(P3, W4, strides=[1,1,1,1], padding='SAME')
+    # RELU
+    A4 = tf.nn.relu(Z4)
+    # MAXPOOL: window 4x4, stride 4, padding 'SAME'
+    P4 = tf.nn.max_pool(A4, ksize=[1,4,4,1], strides=[1,4,4,1], padding='SAME')
+    # CONV2D: filters W4, stride 1, padding 'SAME'
+    Z5 = tf.nn.conv2d(P4, W5, strides=[1,1,1,1], padding='SAME')
+    # RELU
+    A5 = tf.nn.relu(Z5)
+    # MAXPOOL: window 4x4, stride 4, padding 'SAME'
+    P5 = tf.nn.max_pool(A5, ksize=[1,4,4,1], strides=[1,4,4,1], padding='SAME')
     # FLATTEN
-    P3 = tf.contrib.layers.flatten(P3)
+    P5 = tf.contrib.layers.flatten(P5)
     # FULLY-CONNECTED without non-linear activation function (not not call softmax).
     # 6 neurons in output layer. Hint: one of the arguments should be "activation_fn=None" 
-    Z5 = tf.contrib.layers.fully_connected(P3, num_classes, activation_fn=None)
+    Z6 = tf.contrib.layers.fully_connected(P5, num_classes, activation_fn=None)
 
-    return Z5
+    return Z6
 
 def compute_cost(Z3, Y):
     """
@@ -148,7 +164,8 @@ Z3 = forward_propagation(X, parameters)
 # Cost function: Add cost function to tensorflow graph
 cost = compute_cost(Z3, Y)
 regularizers = tf.nn.l2_loss(parameters["W1"]) + tf.nn.l2_loss(parameters["W2"]) + \
-                   tf.nn.l2_loss(parameters["W3"])
+                   tf.nn.l2_loss(parameters["W3"]) + tf.nn.l2_loss(parameters["W4"]) + \
+                    tf.nn.l2_loss(parameters["W5"])
 cost = tf.reduce_mean(cost+beta*regularizers)
 # Backpropagation: Define the tensorflow optimizer. Use an AdamOptimizer that minimizes the cost.
 
