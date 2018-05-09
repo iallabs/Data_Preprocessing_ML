@@ -9,7 +9,7 @@ from image_pro.parameters import *
 num_classes = 2
 num_step = 1500
 num_epochs = 60
-learning_rate = 0.0003
+learning_rate = 0.0002
 beta = 0.003
 def create_placeholders(n_H0, n_W0, n_C0, n_y):
     """

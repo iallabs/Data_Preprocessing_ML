@@ -4,17 +4,16 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.python.framework import ops
 from image_pro.parameters import *
-
+import cv2
 
 num_classes = 2
 num_step = 1500
-num_epochs = 60
-learning_rate = 0.0003
-beta = 0.003
+num_epochs = 45
+learning_rate = 0.00001
+beta = 0.0035
 def create_placeholders(n_H0, n_W0, n_C0, n_y):
     """
     Creates the placeholders for the tensorflow session.
-    
     Arguments:
     n_H0 -- scalar, height of an input image
     n_W0 -- scalar, width of an input image
@@ -40,27 +39,17 @@ def initialize_parameters():
     
     tf.set_random_seed(1)                              # so that your "random" numbers match ours
 
-    W1 = tf.get_variable("W1", [5,5,1,32], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    W2 = tf.get_variable("W2", [5,5,32,32], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    W3 = tf.get_variable("W3", [5,5,32,64], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    W4 = tf.get_variable("W4", [5,5,64,64], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    W5 = tf.get_variable("W5", [5,5,64,128], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    b1 = tf.get_variable("b1", [1,1,1,32],initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    b2 = tf.get_variable("b2", [1,1,1,32],initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    b3 = tf.get_variable("b3", [1,1,1,64],initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    b4 = tf.get_variable("b4", [1,1,1,64],initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    b5 = tf.get_variable("b5", [1,1,1,128],initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    W1 = tf.get_variable("W1", [5,5,1,64], initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    W2 = tf.get_variable("W2", [5,5,64,128], initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    b1 = tf.get_variable("b1", [1,1,1,64],initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    b2 = tf.get_variable("b2", [1,1,1,128],initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    
+
 
     parameters = {"W1": W1,
                   "b1": b1,
                   "W2": W2,
-                  "b2": b2,
-                  "W3": W3,
-                  "b3": b3,
-                  "W4": W4,
-                  "b4": b4,
-                  "W5": W5,
-                  "b5": b5
+                  "b2": b2
                   }
     
     return parameters
@@ -84,12 +73,8 @@ def forward_propagation(X, parameters):
     b1 = parameters['b1']
     W2 = parameters['W2']
     b2 = parameters['b2']
-    W3 = parameters['W3']
-    b3 = parameters['b3']
-    W4 = parameters['W4']
-    b4 = parameters['b4']
-    W5 = parameters['W5']
-    b5 = parameters['b5']
+
+  
 
     # CONV2D: stride of 1, padding 'SAME'
     Z1 = tf.nn.conv2d(X,W1, strides = [1,1,1,1], padding = 'SAME') + b1
@@ -104,28 +89,11 @@ def forward_propagation(X, parameters):
     # MAXPOOL: window 4x4, stride 2, padding 'VALID'
     P2 = tf.nn.max_pool(A2, ksize=[1,2,2,1], strides=[1,2,2,1], padding='VALID')
     # CONV2D: filters W2, stride 1, padding 'SAME'
-    Z3 = tf.nn.conv2d(P2, W3, strides=[1,1,1,1], padding='SAME') + b3
-    # RELU
-    A3 = tf.nn.relu(Z3)
-    # MAXPOOL: window 4x4, stride 2, padding 'VALID'
-    P3 = tf.nn.max_pool(A3, ksize=[1,2,2,1], strides=[1,2,2,1], padding='VALID')
-    # CONV2D: filters W4, stride 1, padding 'SAME'
-    Z4 = tf.nn.conv2d(P3, W4, strides=[1,1,1,1], padding='SAME') + b4
-    # RELU
-    A4 = tf.nn.relu(Z4)
-    # MAXPOOL: window 4x4, stride 2, padding 'VALID'
-    P4 = tf.nn.max_pool(A4, ksize=[1,2,2,1], strides=[1,2,2,1], padding='VALID')
-    # CONV2D: filters W4, stride 1, padding 'SAME'
-    Z5 = tf.nn.conv2d(P4, W5, strides=[1,1,1,1], padding='SAME') + b5
-    # RELU
-    A5 = tf.nn.relu(Z5)
-    # MAXPOOL: window 4x4, stride 2, padding 'SAME'
-    P5 = tf.nn.max_pool(A5, ksize=[1,2,2,1], strides=[1,2,2,1], padding='VALID')
     # FLATTEN
-    P5 = tf.contrib.layers.flatten(P5)
+    P5 = tf.contrib.layers.flatten(P2)
     # FULLY-CONNECTED without non-linear activation function (not not call softmax).
     # 6 neurons in output layer. Hint: one of the arguments should be "activation_fn=None" 
-    Z6 = tf.contrib.layers.fully_connected(P5, num_classes, activation_fn=None)
+    Z6 = tf.contrib.layers.fully_connected(P5, num_classes, activation_fn=None, weights_regularizer=tf.contrib.layers.l2_regularizer, biases_regularizer=tf.contrib.layers.l2_regularizer)
 
     return Z6
 
@@ -140,7 +108,7 @@ def compute_cost(Z3, Y):
     Returns:
     cost - Tensor of the cost function
     """
-    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = Z3, labels = Y))
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits = Z3, labels = Y))
     
     return cost
 
@@ -180,10 +148,7 @@ Z3 = forward_propagation(X, parameters)
 # Cost function: Add cost function to tensorflow graph
 cost = compute_cost(Z3, Y)
 regularizers = tf.nn.l2_loss(parameters["W1"]) + tf.nn.l2_loss(parameters["W2"]) + \
-                   tf.nn.l2_loss(parameters["W3"]) + tf.nn.l2_loss(parameters["W4"]) + \
-                    tf.nn.l2_loss(parameters["W5"]) + tf.nn.l2_loss(parameters["b1"]) + \
-                    tf.nn.l2_loss(parameters["b2"]) +tf.nn.l2_loss(parameters["b3"]) + \
-                    tf.nn.l2_loss(parameters["b4"]) + tf.nn.l2_loss(parameters["b5"])
+                   tf.nn.l2_loss(parameters["b1"]) + tf.nn.l2_loss(parameters["b2"])
 cost = tf.reduce_mean(cost+beta*regularizers)
 # Backpropagation: Define the tensorflow optimizer. Use an AdamOptimizer that minimizes the cost.
 
@@ -221,14 +186,13 @@ with tf.Session() as sess:
             _ , temp_cost = sess.run([optimizer, cost], feed_dict={X: img, Y: label_train})
             temp_acc = accuracy.eval({X:img, Y: label_train})
             train_accuracy += temp_acc/num_step
-            minibatch_cost += temp_cost / num_step
-                
-            
+            minibatch_cost += temp_cost / num_step            
+           
         if epoch % 1 == 0:
-            print ("Cost after epoch %i: %f" % (epoch+1, minibatch_cost))
+            print ("Cost after epoch %i: %f" % (epoch, minibatch_cost))
             costs.append(minibatch_cost)
             acc_train.append(train_accuracy)
-            print ("train after epoch %i: %f" % (epoch+1, train_accuracy))
+            print ("train after epoch %i: %f" % (epoch, train_accuracy))
         
         # plot the cost
     plt.plot(np.squeeze(costs))

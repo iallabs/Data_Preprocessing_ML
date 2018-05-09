@@ -8,9 +8,9 @@ from image_pro.parameters import *
 
 num_classes = 2
 num_step = 1500
-num_epochs = 60
-learning_rate = 0.0003
-beta = 0.003
+num_epochs = 125
+learning_rate = 0.0001
+beta = 0.00125
 def create_placeholders(n_H0, n_W0, n_C0, n_y):
     """
     Creates the placeholders for the tensorflow session.
@@ -40,16 +40,16 @@ def initialize_parameters():
     
     tf.set_random_seed(1)                              # so that your "random" numbers match ours
 
-    W1 = tf.get_variable("W1", [5,5,1,32], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    W2 = tf.get_variable("W2", [5,5,32,32], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    W3 = tf.get_variable("W3", [5,5,32,64], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    W4 = tf.get_variable("W4", [5,5,64,64], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    W5 = tf.get_variable("W5", [5,5,64,128], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    b1 = tf.get_variable("b1", [1,1,1,32],initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    b2 = tf.get_variable("b2", [1,1,1,32],initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    b3 = tf.get_variable("b3", [1,1,1,64],initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    b4 = tf.get_variable("b4", [1,1,1,64],initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    b5 = tf.get_variable("b5", [1,1,1,128],initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    W1 = tf.get_variable("W1", [5,5,1,8], initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    W2 = tf.get_variable("W2", [5,5,8,24], initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    W3 = tf.get_variable("W3", [5,5,24,40], initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    W4 = tf.get_variable("W4", [5,5,40,56], initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    W5 = tf.get_variable("W5", [5,5,56,72], initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    b1 = tf.get_variable("b1", [1,1,1,8],initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    b2 = tf.get_variable("b2", [1,1,1,24],initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    b3 = tf.get_variable("b3", [1,1,1,40],initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    b4 = tf.get_variable("b4", [1,1,1,56],initializer=tf.contrib.layers.xavier_initializer(seed=0))
+    b5 = tf.get_variable("b5", [1,1,1,72],initializer=tf.contrib.layers.xavier_initializer(seed=0))
 
     parameters = {"W1": W1,
                   "b1": b1,
@@ -96,31 +96,31 @@ def forward_propagation(X, parameters):
     # RELU
     A1 = tf.nn.relu(Z1)
     # MAXPOOL: window 4,4 sride 1, padding 'VALID'
-    P1 = tf.nn.max_pool(A1, ksize = [1,2,2,1], strides = [1,2,2,1], padding = 'VALID') 
+    P1 = tf.nn.max_pool(A1, ksize = [1,4,4,1], strides = [1,1,1,1], padding = 'VALID') 
     # CONV2D: filters W2, stride 1, padding 'SAME'
     Z2 = tf.nn.conv2d(P1, W2, strides=[1,1,1,1], padding='SAME') + b2
     # RELU
     A2 = tf.nn.relu(Z2)
     # MAXPOOL: window 4x4, stride 2, padding 'VALID'
-    P2 = tf.nn.max_pool(A2, ksize=[1,2,2,1], strides=[1,2,2,1], padding='VALID')
+    P2 = tf.nn.max_pool(A2, ksize=[1,4,4,1], strides=[1,2,2,1], padding='VALID')
     # CONV2D: filters W2, stride 1, padding 'SAME'
     Z3 = tf.nn.conv2d(P2, W3, strides=[1,1,1,1], padding='SAME') + b3
     # RELU
     A3 = tf.nn.relu(Z3)
     # MAXPOOL: window 4x4, stride 2, padding 'VALID'
-    P3 = tf.nn.max_pool(A3, ksize=[1,2,2,1], strides=[1,2,2,1], padding='VALID')
+    P3 = tf.nn.max_pool(A3, ksize=[1,4,4,1], strides=[1,2,2,1], padding='VALID')
     # CONV2D: filters W4, stride 1, padding 'SAME'
     Z4 = tf.nn.conv2d(P3, W4, strides=[1,1,1,1], padding='SAME') + b4
     # RELU
     A4 = tf.nn.relu(Z4)
     # MAXPOOL: window 4x4, stride 2, padding 'VALID'
-    P4 = tf.nn.max_pool(A4, ksize=[1,2,2,1], strides=[1,2,2,1], padding='VALID')
+    P4 = tf.nn.max_pool(A4, ksize=[1,4,4,1], strides=[1,2,2,1], padding='VALID')
     # CONV2D: filters W4, stride 1, padding 'SAME'
     Z5 = tf.nn.conv2d(P4, W5, strides=[1,1,1,1], padding='SAME') + b5
     # RELU
     A5 = tf.nn.relu(Z5)
     # MAXPOOL: window 4x4, stride 2, padding 'SAME'
-    P5 = tf.nn.max_pool(A5, ksize=[1,2,2,1], strides=[1,2,2,1], padding='VALID')
+    P5 = tf.nn.max_pool(A5, ksize=[1,4,4,1], strides=[1,2,2,1], padding='VALID')
     # FLATTEN
     P5 = tf.contrib.layers.flatten(P5)
     # FULLY-CONNECTED without non-linear activation function (not not call softmax).
@@ -237,22 +237,12 @@ with tf.Session() as sess:
     plt.title("Learning rate =" + str(learning_rate))
     plt.show()
 
-    iterator_test = tfrec_data_input_fn("tftrain.tfrecords", batch_size = 20)
+    iterator_test = tfrec_data_input_fn("tftest.tfrecords", batch_size = 1000)
     test = iterator_test()
     sess.run(test.initializer)
     X_test, Y_test = test.get_next()
-    test_accuracy = 0.0
-    for i in range(99):
-        X_test_b, Y_test_b = sess.run([X_test['image'], Y_test])
-        img_test = X_test_b.reshape(20, T_HEIGHT,T_WIDTH,1)
-        temp_test_accuracy = accuracy.eval({X: img_test, Y: Y_test_b})
-        test_accuracy += temp_test_accuracy/100
+    X_test, Y_test = sess.run([X_test['image'], Y_test])
+    img_test = X_test.reshape(1000, T_HEIGHT,T_WIDTH,T_Channnels)
+    test_accuracy = accuracy.eval({X: img_test, Y: Y_test})
     print("Test Accuracy:", test_accuracy)
-    input_pred = tfrec_data_catvdog("tfpred.tfrecords")
-    image_p = input_pred()
-    image_pred = image_p.get_next()
-    for i in range(99):
-        a = sess.run(image_pred['image'])
-        pred = sess.run(predict_op, feed_dict={X:a.reshape(-1, T_HEIGHT,T_WIDTH,1)})
-        print(pred)
     sess.close()
