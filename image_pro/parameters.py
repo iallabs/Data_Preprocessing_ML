@@ -1,0 +1,9 @@
+UR_DATA_PATH = "./train/*/*.jpg"
+UR_PRED_PATH = "./test1/test1/*.jpg"
+UR_OPTION = "unchanged"
+UR_TEST_SIZE = 2000
+T_HEIGHT = 256
+T_WIDTH = 256
+T_Channnels = 3
+N_HEIGHT = 224
+N_WIDTH = 224
